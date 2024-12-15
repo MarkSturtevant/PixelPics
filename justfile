@@ -1,13 +1,17 @@
 #!/usr/bin/env just --justfile
 
+# set shell := ["cmd.exe", "/c"]
+
+export CLICOLOR_FORCE := "1"
+
 default:
-  @just --list
+  just --list
 
 dev:
   ./frontend/node_modules/.bin/concurrently \
     --names "API,WEB" \
     --prefix-colors "bgBlue.bold,bgMagenta.bold" \
-    './frontend/node_modules/.bin/cross-env CLICOLOR_FORCE=1 {{just_executable()}} --justfile {{justfile()}} dev-backend' \
+    '{{just_executable()}} --justfile {{justfile()}} dev-backend' \
     '{{just_executable()}} --justfile {{justfile()}} dev-frontend'
 
 # TODO: use go tools when go 1.24 comes out
