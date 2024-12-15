@@ -93,7 +93,7 @@
 -->
 
 <div class="flex h-screen w-screen justify-center items-center">
-    <div class="grid grid-cols-2 grid-rows-2">
+    <div class="grid grid-cols-[max-content_1fr] grid-rows-[max-content_1fr]">
         <div></div>
 
         <div class="flex flex-row" style:padding-left="1px" style:padding-right="1px">
@@ -109,7 +109,7 @@
             {/each}
         </div>
 
-        <div class="flex flex-col" style:padding-top="1px" style:padding-bottom="1px">
+        <div class="flex flex-col w-max" style:padding-top="1px" style:padding-bottom="1px">
             {#each rows as row, i}
                 <div class={cn("h-10 flex pr-2 items-center justify-end flex-row bg-gradient-to-r from-transparent border-transparent", (i % 2 === 0) ? "to-black/20" : "to-white/20",
                             i !== 0 && "border-t-[0.5px]", i !== rows.length-1 && "border-b-[0.5px]")} style:gap="24px">
