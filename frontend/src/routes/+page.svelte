@@ -61,24 +61,47 @@
        [3]
     ]);
 
-    function flip(i: number, j: number, typ: string): void {
-        if (puzzle[i][j] === 'S') {
-            if (typ === "S")
-                puzzle[i][j] = 'U';
-        }
-        else if (puzzle[i][j] === 'U') {
-            if (typ === "S")
-                puzzle[i][j] = 'S';
-            else if (typ === "M")
-                puzzle[i][j] = 'M';
-        }
-        else if (puzzle[i][j] === 'M') {
-            if (typ === "S")
-                puzzle[i][j] = 'S';
-            else if (typ === "M")
-                puzzle[i][j] = 'U';
-        }
+    let mouse_down: number = -1;
+    let session: Set<number> = new Set();
 
+    function ev_mouse_down(i: number, j: number, e: MouseEvent): void {
+        mouse_down = e.button;
+        console.log("hiw")
+        test_trigger(i, j);
+    }
+    function ev_mouse_up(): void {
+        mouse_down = -1;
+        session.clear();
+    }
+
+    function test_trigger(i: number, j: number): void {
+        if (mouse_down === 0)
+            flip(i, j, 'S');
+        else if (mouse_down === 2)
+            flip(i, j, 'X');
+        else if (mouse_down === 1)
+            flip(i, j, 'M');
+    }
+
+    function flip(i: number, j: number, typ: string): void {
+        if (i == -1 || j == -1)
+            return;
+
+        if (session.has(i * 10000 + j))
+            return;
+        session.add(i * 10000 + j);
+
+        if (typ === 'S') { // press S
+            puzzle[i][j] = (puzzle[i][j] === 'S') ? 'U' : 'S';
+        }
+        else if (typ === 'X') { // press X
+            puzzle[i][j] = (puzzle[i][j] === 'X') ? 'U' : 'X';
+        }
+        else if (typ === 'M') {
+            if (puzzle[i][j] === 'S' || puzzle[i][j] === 'X')
+                return;
+            puzzle[i][j] = (puzzle[i][j] === 'M') ? 'U' : 'M';
+        }
     }
 
     const TILE_SIZE: number = $state(40)
@@ -131,7 +154,11 @@
                                 j !== 0 && "border-l-[0.5px]",
                                 i !== puzzle.length-1 && "border-b-[0.5px]",
                                 j !== puzzle.length-1 && "border-r-[0.5px]")}
-                                onclick={() => flip(i, j, 'S')} role="button" tabindex="0" onkeyup={() => flip(i, j, 'M')}>
+                                onmouseenter={() => test_trigger(i, j)}
+                                onmousedown={(e) => ev_mouse_down(i, j, e)}
+                                onmouseup={() => ev_mouse_up()}
+                                role="button" tabindex="0"
+                    >
                         {#if cell === 'S'}
                             <div class="rounded bg-white aspect-square" style:width="32px"></div>
                         {:else if cell === 'U'}
