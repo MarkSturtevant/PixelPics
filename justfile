@@ -10,8 +10,9 @@ dev:
     'CLICOLOR_FORCE=1 {{just_executable()}} --justfile {{justfile()}} dev-backend' \
     '{{just_executable()}} --justfile {{justfile()}} dev-frontend'
 
+# TODO: use go tools when go 1.24 comes out
 dev-backend:
-  air \
+  go run -modfile=./backend/tools/go.mod github.com/air-verse/air \
       --build.cmd "go build -o ./.cache/backend ./backend/cmd/pixelpics/." \
       --build.bin "./.cache/backend" \
       --build.exclude_dir "frontend" \
