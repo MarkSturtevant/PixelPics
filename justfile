@@ -17,7 +17,7 @@ dev:
 # TODO: use go tools when go 1.24 comes out
 dev-backend:
   go run github.com/air-verse/air \
-      --build.cmd "go build -o {{"." / ".cache" / "backend.exe ." / "backend" / "cmd" / "pixelpics" / "."}}" \
+      --build.cmd "go build -buildvcs=false -o {{"." / ".cache" / "backend.exe ." / "backend" / "cmd" / "pixelpics" / "."}}" \
       --build.bin "{{join(".cache", "backend.exe")}}" \
       --build.exclude_dir "frontend" \
       -tmp_dir "{{"." / ".cache"}}" serve
