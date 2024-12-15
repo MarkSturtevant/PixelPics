@@ -1,6 +1,6 @@
 #!/usr/bin/env just --justfile
 
-# set shell := ["cmd.exe", "/c"]
+set windows-powershell := true
 
 export CLICOLOR_FORCE := "1"
 
@@ -16,11 +16,11 @@ dev:
 
 # TODO: use go tools when go 1.24 comes out
 dev-backend:
-  go run -modfile=./backend/tools/go.mod github.com/air-verse/air \
+  go run github.com/air-verse/air \
       --build.cmd "go build -o ./.cache/backend ./backend/cmd/pixelpics/." \
       --build.bin "./.cache/backend" \
       --build.exclude_dir "frontend" \
       -tmp_dir ./.cache serve
 
 dev-frontend:
-  cd frontend && bun dev
+  cd frontend; bun dev
