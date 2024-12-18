@@ -89,9 +89,11 @@
 
 		if (typ === 'S') {
 			// press S
+			if (puzzle[i][j] == 'X') return;
 			puzzle[i][j] = puzzle[i][j] === 'S' ? 'U' : 'S';
 		} else if (typ === 'X') {
 			// press X
+			if (puzzle[i][j] == 'S') return;
 			puzzle[i][j] = puzzle[i][j] === 'X' ? 'U' : 'X';
 		} else if (typ === 'M') {
 			if (puzzle[i][j] === 'S' || puzzle[i][j] === 'X') return;
