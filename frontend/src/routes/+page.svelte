@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { scale } from 'svelte/transition';
 	import { cn } from '$lib/utils';
 
 	const rawPuzzle: string[] = [
@@ -185,13 +186,16 @@
 						tabindex="0"
 					>
 						{#if cell === 'S'}
-							<div class="aspect-square rounded bg-white" style:width="32px"></div>
+							<div transition:scale class="aspect-square rounded bg-white" style:width="32px"></div>
 						{:else if cell === 'U'}
-							<div></div>
+							<div transition:scale></div>
 						{:else if cell === 'M'}
-							<div class="aspect-square size-8 rounded border-2 border-white"></div>
+							<div
+								transition:scale
+								class="aspect-square size-8 rounded border-2 border-white"
+							></div>
 						{:else if cell === 'X'}
-							<div class="relative aspect-square size-10">
+							<div transition:scale class="relative aspect-square size-10">
 								<div class="absolute aspect-square size-10">
 									<div class="flex h-full w-full items-center justify-center">
 										<div class="h-8 w-0.5 rotate-45 rounded-full bg-black"></div>
