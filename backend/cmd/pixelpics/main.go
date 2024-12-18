@@ -14,6 +14,7 @@ import (
 	"github.com/coder/websocket"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 )
 
 func handleWS(w http.ResponseWriter, r *http.Request) error {
@@ -81,6 +82,10 @@ func handleWS(w http.ResponseWriter, r *http.Request) error {
 
 func main() {
 	app := pocketbase.New()
+
+	migratecmd.MustRegister(app, app.RootCmd, migratecmd.Config{
+		Automigrate: true,
+	})
 
 	frontendURL, err := url.Parse("http://localhost:5173")
 	if err != nil {
