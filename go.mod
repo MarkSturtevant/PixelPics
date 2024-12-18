@@ -34,6 +34,7 @@ require (
 	github.com/bep/godartsass/v2 v2.1.0 // indirect
 	github.com/bep/golibsass v1.2.0 // indirect
 	github.com/cli/safeexec v1.0.1 // indirect
+	github.com/coder/websocket v1.8.12 // indirect
 	github.com/creack/pty v1.1.23 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/domodwyer/mailyak/v3 v3.6.2 // indirect
