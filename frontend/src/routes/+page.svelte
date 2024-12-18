@@ -98,8 +98,8 @@
 		}
 	}
 
-	const TILE_SIZE: number = $state(40);
-	const MINI_SIZE: number = $derived(TILE_SIZE * 0.8);
+	// const TILE_SIZE: number = $state(40);
+	// const MINI_SIZE: number = $derived(TILE_SIZE * 0.8);
 </script>
 
 <!--
@@ -145,15 +145,17 @@
 						i !== 0 && 'border-t-[0.5px]',
 						i !== rows.length - 1 && 'border-b-[0.5px]'
 					)}
-					style:gap="24px"
+					style:gap="12px"
 				>
 					{#each row as num}
-						<div>
+						<div style:width="24px" class="flex flex-row items-center justify-center">
 							<span
 								class="font-sans font-bold text-black drop-shadow-[0_1.5px_1.5px_rgba(255,255,255,0.8)]"
 								style:font-size="24px"
-								style:line-height="24px">{num}</span
+								style:line-height="24px"
 							>
+								{num}
+							</span>
 						</div>
 					{/each}
 				</div>
