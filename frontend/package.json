@@ -37,7 +37,9 @@
 		"@tailwindcss/container-queries": "^0.1.1",
 		"@tailwindcss/forms": "^0.5.9",
 		"@tailwindcss/typography": "^0.5.15",
+		"cbor2": "^1.8.0",
 		"clsx": "^2.1.1",
+		"nanoid": "^5.0.9",
 		"pocketbase": "^0.23.0",
 		"tailwind-merge": "^2.5.5"
 	}

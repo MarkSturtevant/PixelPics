@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { scale } from 'svelte/transition';
+	import { encode, decode } from 'cbor2';
+	import { nanoid } from 'nanoid';
 	import { cn } from '$lib/utils';
+	import { untrack } from 'svelte';
 
 	const rawPuzzle: string[] = [
 		'XXXXXXXXXXXXXXX',
@@ -101,18 +104,103 @@
 		}
 	}
 
+	const clientID = nanoid();
+
+	let socket: WebSocket;
+
+	const wsRequestMessageAwareness = 1;
+	const wsResponseMessageAwareness = 1;
+	type WSRequestMessageType = typeof wsRequestMessageAwareness;
+	type WSResponseMessageType = typeof wsResponseMessageAwareness;
+
+	const awareness = $state<Record<string, Record<string, unknown>>>({});
+	const localAwareness = $state<Record<string, unknown>>({});
+
+	function sendWSMessage(typ: WSRequestMessageType, msg: unknown): void {
+		if (socket.readyState !== WebSocket.OPEN) return;
+		const data = encode({ t: typ, m: msg });
+		socket.send(data);
+	}
+
+	$effect(() => {
+		untrack(() => {
+			socket = new WebSocket(`/api/v1/ws?id=${clientID}`);
+			socket.binaryType = 'arraybuffer';
+			socket.onmessage = (event) => {
+				const data = decode(new Uint8Array(event.data)) as { t: WSResponseMessageType; m: unknown };
+				switch (data.t) {
+					case wsResponseMessageAwareness: {
+						const msg = data.m as Record<string, Record<string, unknown>>;
+						for (const key in msg) {
+							if (key === clientID) continue;
+							if (msg[key] === null) delete awareness[key];
+							else awareness[key] = msg[key];
+						}
+						break;
+					}
+				}
+			};
+			socket.onclose = () => {
+				console.log('Socket is closed.');
+			};
+			socket.onerror = (err) => {
+				console.error('Socket encountered error: ', err);
+				socket.close();
+			};
+			socket.onopen = () => {
+				console.log('Connected to server');
+			};
+		});
+	});
+
+	$effect(() => {
+		if (Object.keys(localAwareness).length === 0) return;
+		sendWSMessage(wsRequestMessageAwareness, localAwareness);
+	});
+
+	let puzzleDiv = $state<HTMLElement | null>(null);
+
+	function updateCursor(clientX: number, clientY: number): void {
+		if (!puzzleDiv) return;
+		const rect = puzzleDiv.getBoundingClientRect();
+		const yRelativeCoord = (clientY - rect.top) / rect.height;
+		const xRelativeCoord = (clientX - rect.left) / rect.width;
+		localAwareness.cursorX = xRelativeCoord;
+		localAwareness.cursorY = yRelativeCoord;
+	}
+
+	const liveCursors = $derived.by<Record<string, { x: number; y: number }>>(() => {
+		if (!puzzleDiv) return {};
+		const rect = puzzleDiv.getBoundingClientRect();
+		const cursors: Record<string, { x: number; y: number }> = {};
+		for (const key in awareness) {
+			const cursor = awareness[key];
+			if (typeof cursor.cursorX !== 'number' || typeof cursor.cursorY !== 'number') continue;
+			const xAbsCoord = Math.max(
+				0,
+				Math.min(cursor.cursorX * rect.width + rect.left, window.innerWidth)
+			);
+			const yAbsCoord = Math.max(
+				0,
+				Math.min(cursor.cursorY * rect.height + rect.top, window.innerHeight)
+			);
+			cursors[key] = { x: xAbsCoord, y: yAbsCoord };
+		}
+		return cursors;
+	});
+
 	// const TILE_SIZE: number = $state(40);
 	// const MINI_SIZE: number = $derived(TILE_SIZE * 0.8);
 </script>
 
-<!--
-<button onclick={() => puzzle[0][0] = 'U'}>
-    hi
-</button>
--->
-
-<div class="flex h-screen w-screen items-center justify-center">
-	<div class="grid grid-cols-[max-content_1fr] grid-rows-[max-content_1fr]">
+<div
+	class="flex h-screen w-screen items-center justify-center"
+	role="main"
+	onmousemove={(e) => {
+		updateCursor(e.clientX, e.clientY);
+	}}
+>
+	<div bind:this={puzzleDiv} class="grid grid-cols-[max-content_1fr] grid-rows-[max-content_1fr]">
 		<div></div>
 
 		<div class="flex flex-row" style:padding-left="1px" style:padding-right="1px">
@@ -216,3 +304,8 @@
 		</div>
 	</div>
 </div>
+{#each Object.keys(liveCursors) as key}
+	<div class="absolute" style:top="{liveCursors[key].y}px" style:left="{liveCursors[key].x}px">
+		<div class="h-4 w-4 rounded-full bg-red-500"></div>
+	</div>
+{/each}
