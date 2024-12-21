@@ -4,7 +4,7 @@
 	import { nanoid } from 'nanoid';
 	import { cn } from '$lib/utils';
 	import { onMount, untrack } from 'svelte';
-	import { gameCollection, gameEventCollection } from '$lib/api';
+	import {gameCollection, gameEventCollection, pb} from '$lib/api';
 	import { logInWithDiscord } from '$lib/api';
 
 	const puzzle: ('S' | 'U' | 'M' | 'X')[][] = $state([['U']]);
@@ -29,8 +29,17 @@
 			document.body.style.backgroundColor = data.style_meta['background-color'];
 			puzzleColor = data.style_meta['puzzle-color'];
 
-			// TODO: set the background image
-			// TODO: implement
+			// set the background image
+			console.log(data.background_image);
+
+			// @ts-ignore
+			document.getElementById('body-bg-image').style.backgroundImage = `url(${pb.files.getURL(data, data.background_image)})`;
+
+			/*
+			document.body.style.backgroundImage = `url(${pb.files.getURL(data, data.background_image)})`;
+			document.body.style.backgroundRepeat = 'no-repeat';
+			document.body.style.backgroundSize = 'cover';
+			document.body.style.background*/
 
 			// generate an empty puzzle
 			puzzle.pop();
