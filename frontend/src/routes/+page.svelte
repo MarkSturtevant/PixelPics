@@ -3,74 +3,103 @@
 	import { encode, decode } from 'cbor2';
 	import { nanoid } from 'nanoid';
 	import { cn } from '$lib/utils';
-	import { untrack } from 'svelte';
+	import {onMount, untrack} from 'svelte';
+	import PocketBase, {type ListResult, type RecordModel} from 'pocketbase';
+	import {gameCollection, gameEventCollection} from "$lib/api";
 
-	const rawPuzzle: string[] = [
-		'XXXXXXXXXXXXXXX',
-		'XXXXXXXXXXXXXXX',
-		'XSXXXXXXXXXXXXX',
-		'SSSSXXXXXXXXXXX',
-		'SXSSSSXXXXXXXXX',
-		'SXSSXSSSSXXXXXX',
-		'SXSSSSSXSSSSSSX',
-		'SXSSSXSSSSXSXSS',
-		'XSXSSSSSXSSSXSS',
-		'XSSXSSSSSSSXSSS',
-		'XXSSXSSSSSXSSSX',
-		'XXXSSXXXXXSSSXX',
-		'XXXXSSSSSSSXXXX',
-		'XXXXXXXXXXXXXXX',
-		'XXXXXXXXXXXXXXX'
-	];
+	const pb = new PocketBase('http://127.0.0.1:8090');
 
-	function convertRawToPuzzle(raw: string[]) {
-		return raw.map((row) => row.split('') as ('S' | 'U' | 'M' | 'X')[]);
-	}
+	const puzzle: ('S' | 'U' | 'M' | 'X')[][] = $state([['U']]);
+	const rows: number[][] = $state([[1]]);
+	const cols: number[][] = $state([[1]]);
+	let puzzleSolution: string = "1";
 
-	const puzzle: ('S' | 'U' | 'M' | 'X')[][] = $state(convertRawToPuzzle(rawPuzzle));
+	let userURL: string = "ad1bjp5ogg316z8";
+	let gameURL: string = "31882z3yp737sjs";
 
-	const rows: number[][] = $state([
-		[0],
-		[0],
-		[1],
-		[4],
-		[1, 4],
-		[1, 2, 4],
-		[1, 5, 6],
-		[1, 3, 4, 1, 2],
-		[1, 5, 3, 2],
-		[2, 7, 3],
-		[2, 5, 3],
-		[2, 3],
-		[7],
-		[0],
-		[0]
-	]);
+	onMount(() => {
+		const gamePromise = gameCollection.getOne(gameURL, {expand: 'puzzle'});
+		gamePromise.then(game => {
 
-	const cols: number[][] = $state([
-		[5],
-		[2, 2],
-		[5, 2],
-		[6, 2],
-		[1, 4, 2],
-		[3, 3, 1],
-		[6, 1],
-		[1, 4, 1],
-		[3, 2, 1],
-		[5, 1],
-		[1, 2, 2],
-		[3, 2],
-		[1, 3],
-		[5],
-		[3]
-	]);
+			const data = game?.expand?.puzzle;
+			if (! data) {
+				console.log("jimmy is stupid");
+				return;
+			}
+
+			// generate an empty puzzle
+			puzzle.pop();
+			for (let i = 0; i < data.puzzle.rl; ++i) {
+				const temp: ('S' | 'U' | 'M' | 'X')[] = [];
+				for (let j = 0; j < data.puzzle.cl; ++j)
+					temp.push('U');
+				puzzle.push(temp);
+			}
+
+			// get the puzzle solution
+			puzzleSolution = data.puzzle.pd;
+
+			// parse the current puzzle progress
+			const eventsPromise = gameEventCollection.getFullList({
+				filter: 'game = "' + gameURL + '"',
+				sort: 'created'
+			});
+			eventsPromise.then(eventsList => {
+				for (let event of eventsList)
+					puzzle[event.action.r][event.action.c] = event.action.t;
+			});
+
+			// parse the rows
+			rows.pop();
+			for (let i = 0; i < data.puzzle.rl; ++i) {
+				const temp: number[] = []
+				let curCnt = 0;
+				for (let j = 0; j < data.puzzle.cl; ++j) {
+					const p = i*data.puzzle.cl + j;
+					if (puzzleSolution[p] === '1')
+						curCnt++;
+					if (curCnt > 0 && (puzzleSolution[p] === '0' || j === data.puzzle.cl - 1)) {
+						temp.push(curCnt);
+						curCnt = 0;
+					}
+				}
+				if (temp.length === 0) temp.push(0);
+				rows.push(temp);
+			}
+			if (rows.length === 0) rows.push([0]);
+
+			// parse the cols
+			cols.pop();
+			for (let i = 0; i < data.puzzle.cl; ++i) {
+				const temp: number[] = []
+				let curCnt = 0;
+				for (let j = 0; j < data.puzzle.rl; ++j) {
+					const p = j*data.puzzle.cl + i;
+					if (puzzleSolution[p] === '1')
+						curCnt++;
+					if (curCnt > 0 && (puzzleSolution[p] === '0' || j === data.puzzle.rl - 1)) {
+						temp.push(curCnt);
+						curCnt = 0;
+					}
+				}
+				if (temp.length === 0) temp.push(0);
+				cols.push(temp);
+			}
+		});
+
+		gameEventCollection.subscribe('*', function (data) {
+			if (data.action === "create" && data.record.game === gameURL)
+				puzzle[data.record.action.r][data.record.action.c] = data.record.action.t;
+		});
+	});
 
 	let mouse_down: number = -1;
+	let starter = 'U';
 	let session: Set<number> = new Set();
 
 	function ev_mouse_down(i: number, j: number, e: MouseEvent): void {
 		mouse_down = e.button;
-		console.log('hiw');
+		starter = puzzle[i][j];
 		test_trigger(i, j);
 	}
 	function ev_mouse_up(): void {
@@ -86,22 +115,36 @@
 
 	function flip(i: number, j: number, typ: string): void {
 		if (i == -1 || j == -1) return;
+		if (puzzle[i][j] != starter) return;
 
 		if (session.has(i * 10000 + j)) return;
 		session.add(i * 10000 + j);
 
 		if (typ === 'S') {
-			// press S
+			// press S: solid tile
 			if (puzzle[i][j] == 'X') return;
 			puzzle[i][j] = puzzle[i][j] === 'S' ? 'U' : 'S';
 		} else if (typ === 'X') {
-			// press X
+			// press X: x tile
 			if (puzzle[i][j] == 'S') return;
 			puzzle[i][j] = puzzle[i][j] === 'X' ? 'U' : 'X';
 		} else if (typ === 'M') {
+			// press M: mark tile
 			if (puzzle[i][j] === 'S' || puzzle[i][j] === 'X') return;
 			puzzle[i][j] = puzzle[i][j] === 'M' ? 'U' : 'M';
 		}
+
+		// create a game event and publish it
+		const data = {
+			"game": gameURL,
+			"author": userURL,
+			"action": {
+				"t": puzzle[i][j],
+				"r": i,
+				"c": j
+			}
+		}
+		pb.collection('game_events').create(data);
 	}
 
 	const clientID = nanoid();

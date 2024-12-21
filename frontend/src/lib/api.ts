@@ -8,7 +8,7 @@ interface RecordModel {
 	collectionName: string;
 }
 
-export const pb = new PocketBase(window.location.origin);
+export const pb = new PocketBase("/");
 
 export type PuzzleRecord = RecordModel & {
 	name: string;
@@ -46,17 +46,22 @@ export type GameEventRecord = RecordModel & {
 	author: string;
 	action:
 		| {
-				t: 'set';
+				t: 'S';
 				r: number;
 				c: number;
 		  }
 		| {
-				t: 'unset';
+				t: 'U';
 				r: number;
 				c: number;
 		  }
 		| {
-				t: 'mark';
+				t: 'M';
+				r: number;
+				c: number;
+		  }
+		| {
+				t: 'X';
 				r: number;
 				c: number;
 		  };
