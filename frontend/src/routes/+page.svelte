@@ -7,6 +7,8 @@
 	import {gameCollection, gameEventCollection, pb} from '$lib/api';
 	import { logInWithDiscord } from '$lib/api';
 
+	pb.autoCancellation(false);
+
 	const puzzle: ('S' | 'U' | 'M' | 'X')[][] = $state([['U']]);
 	const rows: number[][] = $state([[1]]);
 	const cols: number[][] = $state([[1]]);
@@ -66,7 +68,7 @@
 	}
 
 	let userURL: string = 'ad1bjp5ogg316z8';
-	let gameURL: string = '31882z3yp737sjs';
+	let gameURL: string = '9a951768vgnpx5v';
 
 	onMount(() => {
 		const gamePromise = gameCollection.getOne(gameURL, { expand: 'puzzle' });
@@ -157,8 +159,8 @@
 		});
 
 		gameEventCollection.subscribe('*', function (data) {
-			if (data.action === 'create' && data.record.game === gameURL)
-				puzzle[data.record.action.r][data.record.action.c] = data.record.action.t;
+			console.log(data);
+			puzzle[data.record.action.r][data.record.action.c] = data.record.action.t;
 		});
 	});
 
