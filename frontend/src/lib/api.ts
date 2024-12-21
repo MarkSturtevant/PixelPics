@@ -1,4 +1,4 @@
-import PocketBase, { ClientResponseError, RecordService } from 'pocketbase';
+import PocketBase, { RecordService } from 'pocketbase';
 
 interface RecordModel {
 	id: string;
@@ -75,72 +75,14 @@ export type UserRecord = RecordModel & {
 	emailVisibility: boolean;
 	verified: boolean;
 	name: string;
+	username: string;
 	avatar: string;
 };
 
 export const userCollection = pb.collection('users') as RecordService<UserRecord>;
 
-export async function logInWithGoogle(): Promise<'success' | 'failed'> {
-	const authData = await pb.collection('users').authWithOAuth2({ provider: 'google' });
+export async function logInWithDiscord(): Promise<'success' | 'failed'> {
+	await pb.collection('users').authWithOAuth2({ provider: 'discord' });
 	if (!pb.authStore.isValid) return 'failed';
-	const meta = authData.meta;
-	if (!meta) return 'success';
-	if (meta.isNew) {
-		const formData = new FormData();
-		const response = await fetch(meta.avatarUrl);
-		if (response.ok) {
-			const file = await response.blob();
-			formData.append('avatar', file);
-		}
-		formData.append('name', meta.name);
-		await pb.collection('users').update(authData.record.id, formData);
-	}
-	return 'success';
-}
-
-export async function signUpWithUsername(
-	email: string,
-	password: string,
-	name: string
-): Promise<'success' | 'empty-email' | 'empty-password' | 'invalid-credentials'> {
-	if (!email) return 'empty-email';
-	if (!password) return 'empty-password';
-	const users = await userCollection.getList(1, 1, { filter: `email = '${email}'` });
-	if (users.items.length === 0) {
-		try {
-			await pb.collection('users').create({ email, password, passwordConfirm: password, name });
-		} catch (e: unknown) {
-			const err = e as ClientResponseError;
-			void err;
-			return 'invalid-credentials';
-		}
-	}
-	try {
-		await pb.collection('users').authWithPassword(email, password);
-	} catch (e: unknown) {
-		const err = e as ClientResponseError;
-		void err;
-		return 'invalid-credentials';
-	}
-	if (!pb.authStore.isValid) return 'invalid-credentials';
-	return 'success';
-}
-
-export async function logInWithUsername(
-	email: string,
-	password: string
-): Promise<'success' | 'empty-email' | 'empty-password' | 'invalid-credentials'> {
-	if (!email) return 'empty-email';
-	if (!password) return 'empty-password';
-	const users = await userCollection.getList(1, 1, { filter: `email = '${email}'` });
-	if (users.items.length === 0) return 'invalid-credentials';
-	try {
-		await pb.collection('users').authWithPassword(email, password);
-	} catch (e: unknown) {
-		const err = e as ClientResponseError;
-		void err;
-		return 'invalid-credentials';
-	}
-	if (!pb.authStore.isValid) return 'invalid-credentials';
 	return 'success';
 }

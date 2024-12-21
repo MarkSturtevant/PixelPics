@@ -3,27 +3,24 @@
 	import { encode, decode } from 'cbor2';
 	import { nanoid } from 'nanoid';
 	import { cn } from '$lib/utils';
-	import {onMount, untrack} from 'svelte';
-	import PocketBase, {type ListResult, type RecordModel} from 'pocketbase';
-	import {gameCollection, gameEventCollection} from "$lib/api";
-
-	const pb = new PocketBase('http://127.0.0.1:8090');
+	import { onMount, untrack } from 'svelte';
+	import { gameCollection, gameEventCollection } from '$lib/api';
+	import { logInWithDiscord } from '$lib/api';
 
 	const puzzle: ('S' | 'U' | 'M' | 'X')[][] = $state([['U']]);
 	const rows: number[][] = $state([[1]]);
 	const cols: number[][] = $state([[1]]);
-	let puzzleSolution: string = "1";
+	let puzzleSolution: string = '1';
 
-	let userURL: string = "ad1bjp5ogg316z8";
-	let gameURL: string = "31882z3yp737sjs";
+	let userURL: string = 'ad1bjp5ogg316z8';
+	let gameURL: string = '31882z3yp737sjs';
 
 	onMount(() => {
-		const gamePromise = gameCollection.getOne(gameURL, {expand: 'puzzle'});
-		gamePromise.then(game => {
-
+		const gamePromise = gameCollection.getOne(gameURL, { expand: 'puzzle' });
+		gamePromise.then((game) => {
 			const data = game?.expand?.puzzle;
-			if (! data) {
-				console.log("jimmy is stupid");
+			if (!data) {
+				console.log('jimmy is stupid');
 				return;
 			}
 
@@ -31,8 +28,7 @@
 			puzzle.pop();
 			for (let i = 0; i < data.puzzle.rl; ++i) {
 				const temp: ('S' | 'U' | 'M' | 'X')[] = [];
-				for (let j = 0; j < data.puzzle.cl; ++j)
-					temp.push('U');
+				for (let j = 0; j < data.puzzle.cl; ++j) temp.push('U');
 				puzzle.push(temp);
 			}
 
@@ -44,20 +40,18 @@
 				filter: 'game = "' + gameURL + '"',
 				sort: 'created'
 			});
-			eventsPromise.then(eventsList => {
-				for (let event of eventsList)
-					puzzle[event.action.r][event.action.c] = event.action.t;
+			eventsPromise.then((eventsList) => {
+				for (let event of eventsList) puzzle[event.action.r][event.action.c] = event.action.t;
 			});
 
 			// parse the rows
 			rows.pop();
 			for (let i = 0; i < data.puzzle.rl; ++i) {
-				const temp: number[] = []
+				const temp: number[] = [];
 				let curCnt = 0;
 				for (let j = 0; j < data.puzzle.cl; ++j) {
-					const p = i*data.puzzle.cl + j;
-					if (puzzleSolution[p] === '1')
-						curCnt++;
+					const p = i * data.puzzle.cl + j;
+					if (puzzleSolution[p] === '1') curCnt++;
 					if (curCnt > 0 && (puzzleSolution[p] === '0' || j === data.puzzle.cl - 1)) {
 						temp.push(curCnt);
 						curCnt = 0;
@@ -71,12 +65,11 @@
 			// parse the cols
 			cols.pop();
 			for (let i = 0; i < data.puzzle.cl; ++i) {
-				const temp: number[] = []
+				const temp: number[] = [];
 				let curCnt = 0;
 				for (let j = 0; j < data.puzzle.rl; ++j) {
-					const p = j*data.puzzle.cl + i;
-					if (puzzleSolution[p] === '1')
-						curCnt++;
+					const p = j * data.puzzle.cl + i;
+					if (puzzleSolution[p] === '1') curCnt++;
 					if (curCnt > 0 && (puzzleSolution[p] === '0' || j === data.puzzle.rl - 1)) {
 						temp.push(curCnt);
 						curCnt = 0;
@@ -88,7 +81,7 @@
 		});
 
 		gameEventCollection.subscribe('*', function (data) {
-			if (data.action === "create" && data.record.game === gameURL)
+			if (data.action === 'create' && data.record.game === gameURL)
 				puzzle[data.record.action.r][data.record.action.c] = data.record.action.t;
 		});
 	});
@@ -136,15 +129,15 @@
 
 		// create a game event and publish it
 		const data = {
-			"game": gameURL,
-			"author": userURL,
-			"action": {
-				"t": puzzle[i][j],
-				"r": i,
-				"c": j
+			game: gameURL,
+			author: userURL,
+			action: {
+				t: puzzle[i][j],
+				r: i,
+				c: j
 			}
-		}
-		pb.collection('game_events').create(data);
+		};
+		gameEventCollection.create(data);
 	}
 
 	const clientID = nanoid();
@@ -235,6 +228,14 @@
 	// const TILE_SIZE: number = $state(40);
 	// const MINI_SIZE: number = $derived(TILE_SIZE * 0.8);
 </script>
+
+<button
+	onclick={() => {
+		logInWithDiscord();
+	}}
+>
+	Discord
+</button>
 
 <div
 	class="flex h-screen w-screen items-center justify-center"
