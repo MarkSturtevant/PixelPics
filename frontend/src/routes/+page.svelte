@@ -392,7 +392,11 @@
 								i !== 0 && 'border-t-[0.5px]',
 								j !== 0 && 'border-l-[0.5px]',
 								i !== puzzle.length - 1 && 'border-b-[0.5px]',
-								j !== puzzle.length - 1 && 'border-r-[0.5px]'
+								j !== puzzle.length - 1 && 'border-r-[0.5px]',
+								i % 5 === 0 && 'border-t-amber-500',
+								j % 5 === 0 && 'border-l-amber-500',
+								i % 5 === 4 && 'border-b-amber-500',
+								j % 5 === 4 && 'border-r-amber-500'
 							)}
 							onmouseenter={() => test_trigger(i, j)}
 							onmousedown={(e) => ev_mouse_down(i, j, e)}
