@@ -21,6 +21,7 @@ export type PuzzleRecord = RecordModel & {
 	};
 	style_meta: {
 		'background-color': string;
+		'puzzle-color': string;
 	};
 	category: string;
 	author: string;

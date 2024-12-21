@@ -11,6 +11,7 @@
 	const rows: number[][] = $state([[1]]);
 	const cols: number[][] = $state([[1]]);
 	let puzzleSolution: string = '1';
+	let puzzleColor = $state("#c084fc");
 
 	let userURL: string = 'ad1bjp5ogg316z8';
 	let gameURL: string = '31882z3yp737sjs';
@@ -22,7 +23,14 @@
 			if (!data) {
 				console.log('jimmy is stupid');
 				return;
-			}
+			} // #84aff5
+
+			// set the background colors
+			document.body.style.backgroundColor = data.style_meta['background-color'];
+			puzzleColor = data.style_meta['puzzle-color'];
+
+			// TODO: set the background image
+			// TODO: implement
 
 			// generate an empty puzzle
 			puzzle.pop();
@@ -306,8 +314,8 @@
 				{#each row as cell, j}
 					<div
 						class={cn(
-							'aspect-square size-10 place-content-center place-items-center bg-purple-400 outline-none',
-							'border-purple-200 hover:border-amber-400',
+							'aspect-square size-10 place-content-center place-items-center outline-none',
+							'border-white hover:border-amber-400 hover:border-2',
 							i !== 0 && 'border-t-[0.5px]',
 							j !== 0 && 'border-l-[0.5px]',
 							i !== puzzle.length - 1 && 'border-b-[0.5px]',
@@ -318,6 +326,7 @@
 						onmouseup={() => ev_mouse_up()}
 						role="button"
 						tabindex="0"
+						style:background-color={puzzleColor}
 					>
 						{#if cell === 'S'}
 							<div transition:scale class="aspect-square rounded bg-white" style:width="32px"></div>
@@ -325,8 +334,8 @@
 							<div transition:scale></div>
 						{:else if cell === 'M'}
 							<div
-								transition:scale
-								class="aspect-square size-8 rounded border-2 border-white"
+									transition:scale
+									class="aspect-square size-8 rounded border-2 border-white"
 							></div>
 						{:else if cell === 'X'}
 							<div transition:scale class="relative aspect-square size-10">
