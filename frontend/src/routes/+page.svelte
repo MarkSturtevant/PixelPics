@@ -68,7 +68,7 @@
 	}
 
 	let userURL: string = 'ad1bjp5ogg316z8';
-	let gameURL: string = '9a951768vgnpx5v';
+	let gameURL: string = 't56y2393kk15efd';
 
 	onMount(() => {
 		const gamePromise = gameCollection.getOne(gameURL, { expand: 'puzzle' });
@@ -309,13 +309,13 @@
 	// const MINI_SIZE: number = $derived(TILE_SIZE * 0.8);
 </script>
 
-<button
+<!-- <button
 	onclick={() => {
 		logInWithDiscord();
 	}}
 >
 	Discord
-</button>
+</button> -->
 
 <div
 	class="flex h-screen w-screen items-center justify-center"
@@ -405,29 +405,28 @@
 							tabindex="0"
 							style:background-color={puzzleColor}
 						>
-							{#if cell === 'S'}
-								<div transition:scale class="aspect-square rounded bg-white" style:width="32px"></div>
-							{:else if cell === 'U'}
-								<div transition:scale></div>
-							{:else if cell === 'M'}
-								<div
-										transition:scale
-										class="aspect-square size-8 rounded border-2 border-white"
-								></div>
-							{:else if cell === 'X'}
-								<div transition:scale class="relative aspect-square size-10">
-									<div class="absolute aspect-square size-10">
+							<div class="flex h-full w-full items-center justify-center relative">
+								{#if cell === 'S'}
+									<div transition:scale class="absolute aspect-square size-8 rounded bg-white"></div>
+								{:else if cell === 'U'}
+									<div transition:scale></div>
+								{:else if cell === 'M'}
+									<div transition:scale class="absolute aspect-square size-8 rounded border-2 border-white"></div>
+								{:else if cell === 'X'}
+									<div transition:scale class="absolute aspect-square size-10  ">
 										<div class="flex h-full w-full items-center justify-center">
 											<div class="h-8 w-0.5 rotate-45 rounded-full bg-black"></div>
 										</div>
 									</div>
-									<div class="absolute aspect-square size-10">
+									<div transition:scale class="absolute aspect-square size-10 ">
 										<div class="flex h-full w-full items-center justify-center">
 											<div class="h-8 w-0.5 -rotate-45 rounded-full bg-black"></div>
 										</div>
 									</div>
-								</div>
-							{/if}
+								{/if}
+							</div>
+
+
 						</div>
 					{/each}
 				{/each}
